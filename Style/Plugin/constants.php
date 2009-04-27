@@ -1,10 +1,4 @@
 <?php
-/******************************************************************************
- Prevent direct access
- // v1.1 with named vars
- 
- ******************************************************************************/
-
 
 $plugin_class = 'ConstantsPlugin';
 class ConstantsPlugin extends CacheerPlugin

@@ -1,5 +1,4 @@
 <? 
-
 class UTILITY
 {
     public static function is($var) 
