@@ -11,7 +11,7 @@
 //     public static function set($k,$v){ self::$o[$k] = $v;   }
 // }
 // 
-// 
+//
 // # .../path/to/web/public
 // CONFIG::set('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT']);
 // 
@@ -52,6 +52,3 @@ foreach ($config as $k => $v) {
     CONFIG::set($k,$v);
 }
 unset($config);
-
-require_once(CONFIG::get('ACTIVEFRONT_ROOT') . '/Init.php');
-
