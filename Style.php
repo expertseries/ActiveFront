@@ -32,15 +32,16 @@ class STYLECACHEER
     public static function _config()
     {
         $style_path = $_SERVER['DOCUMENT_ROOT'] . '/a/styles';
+        
         self::$p['requested_file'] = isset($_GET['request']) ? $_SERVER['DOCUMENT_ROOT'] . $_GET['request'] : '';
         self::$p['requested_dir']  = preg_replace('#/[^/]*$#', '', self::$p['requested_file']);
         self::$p['css_dir']        = $style_path;
         self::$p['cssc_cache_dir'] = $_SERVER['DOCUMENT_ROOT'] . '/a/cache/';
-        self::$p['relative_file']  = substr(self::$p['requested_file'], strlen(self::$p['css_dir']) + 1);;
+        self::$p['relative_file']  = preg_replace('#\/a\/#i',"",$_GET['request'] );
         self::$p['absolute_file']  = self::$p['requested_file'];
         self::$p['relative_dir']   = (strpos(self::$p['relative_file'], '/') === false) ? '' : preg_replace("/\/[^\/]*$/", '', self::$p['relative_file']);
         self::$p['cached_dir']     = self::$p['cssc_cache_dir'].self::$p['relative_dir'];
-        self::$p['cached_dir']     = $_SERVER['DOCUMENT_ROOT'] . '/a/cache/';
+        //self::$p['cached_dir']     = $_SERVER['DOCUMENT_ROOT'] . '/a/cache/';
         self::$p['plugins_path']   = $_SERVER['DOCUMENT_ROOT'] . '/_/Jack/Style/Plugin';
         self::$p['recache']        = isset($_GET['recache']);
     }
@@ -61,6 +62,7 @@ class STYLECACHEER
                                     '#(.+)(\.css)$#i',
                                     "$1-{$checksum}$2",
                                     self::$p['relative_file'] );
+
 
         if (self::$p['recache'] && file_exists(self::$p['cached_file']))
         {

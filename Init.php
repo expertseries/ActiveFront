@@ -9,13 +9,13 @@ class ActiveFront
 {
     public static $p = array
     (
-        'request_uri' => '',
-        'domain_name' => '',
-        'route_id'    => '',
-        'source_file' => '',
+        'request_uri'    => '',
+        'domain_name'    => '',
+        'route_id'       => '',
+        'source_file'    => '',
         'listing_format' => '',
-        'id'          => '',
-        'name'        => ''
+        'id'             => '',
+        'name'           => ''
     );
 
     public static function init($uri)
@@ -30,8 +30,8 @@ class ActiveFront
             exit();
         }
 
-        if (file_exists($root.'_helpers.php')) require_once($root.'_helpers.php');
-        if (file_exists($root.'_footer.php')) require_once($root.'_footer.php');
+        if (file_exists($root.'_helpers.php'))  require_once($root.'_helpers.php');
+        if (file_exists($root.'_footer.php'))   require_once($root.'_footer.php');
         if (file_exists($root.'_extended.php')) require_once($root.'_extended.php');
         
         $meta = self::mapRequest($uri);
@@ -64,6 +64,8 @@ class ActiveFront
         {
             case 'js'         : require_once('Script.php'); break;
             case 'css'        : require_once('Style.php'); STYLECACHEER::init();  break;
+            case '/a/scripts/': require_once('Script/Folder.php'); break;
+            case '/a/styles/' : require_once('Style/Folder.php'); break;
             case '/a/scripts/': require_once('Script/Folder.php'); break;
             case '/a/styles/' : require_once('Style/Folder.php'); break;
         }

@@ -35,14 +35,18 @@ $css = $header.$css;
 /******************************************************************************
  Make sure the target directory exists
  ******************************************************************************/
+
+ 
 if ($cached_file != $cached_dir && !is_dir($cached_dir))
 {
     $path = $cssc_cache_dir;
     $dirs = explode('/', $relative_dir);
     foreach ($dirs as $dir)
     {
-        $path .= '/'.$dir;
-        mkdir($path, 0777);
+        if ($dir != '') {
+            $path .= '/'.$dir;
+            mkdir($path, 0777);
+        }
     }
 }
 
