@@ -133,6 +133,10 @@ class ActiveFront
                 );
 
                 $tgt = array();
+
+                //trim any leading subdomain info from the request
+                $req['host'] = preg_replace('/.*?([^.]+\.\w+\.\w+)$/','\\1',$req['host']);
+
                 foreach ($files as $file)
                 {
                     $a = explode(',', $file, 3);
@@ -142,7 +146,7 @@ class ActiveFront
                         'route' => $a[1],
                         'uri'   => substr($a[2],0,strpos($a[2],'.php'))
                     );
-                    //array_push($metafiles,$mf);
+
                     if ( $mf['host'] == $req['host'] ) {
                         if (($mf['uri'] == $req['uri'])
                             || (($mf['route'] == 0) && ($req['uri'] == ''))
