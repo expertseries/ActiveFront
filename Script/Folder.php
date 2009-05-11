@@ -27,7 +27,7 @@ class ScriptManager {
                     ) {
 //                    self::$filelist[] = $rootPath . '/' . $path . $file;
                     $last_modified = filemtime($path . $file);
-                    self::$filelist[] =  $rel_path . $file . '?' . $last_modified;
+                    self::$filelist[] =  $rel_path . $file . '?recache=' . $last_modified;
 
                 }
             }

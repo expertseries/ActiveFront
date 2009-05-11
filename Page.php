@@ -23,7 +23,9 @@ class PAGE
         'subcontent'     => '',
         'root'           => '',
         'buffer'         => NULL,
-        'page'           => false
+        'page'           => false,
+        'layout_default' => '',
+        'layout_id'      => ''
     );
     
     // DEFAULT PARTIALS, ADD MORE IN webroot/_constants.php
@@ -35,6 +37,7 @@ class PAGE
         'STYLE'        => '',
         'MENU'         => '',
         'BODY'         => '',
+        'LAYOUT'       => '',
         'PAGE'         => '',
         'COMMENT'      => '',
         'EXTRA'        => '',
@@ -42,65 +45,66 @@ class PAGE
         'EXTENDED'     => ''
     );
 
-    protected static function _capture($path)
+    protected function __construct() {} 
+    final private function __clone() {}
+    public    static function set($a) { foreach ($a as $k => $v) self::$config[$k] = $v; }
+    public    static function id()    { return self::$config['id'];   }
+    public    static function name()  { return self::$config['name']; }
+
+    protected static function _capture($path) { require_once($path); }
+    protected static function _flush()
     {
-        require_once($path);
+        // if a content section was already started
+        if ( !is_null(self::$config['buffer']) ){
+            $bufferid = self::$config['buffer'];
+            if ( !isset(self::$content[ $bufferid ])) {
+                self::$content[ $bufferid ] = '';
+            }
+            // append everything in the cache to its content section id
+            self::$content[ $bufferid ] .= ob_get_clean();
+            self::$config['buffer'] = NULL;
+        }
     }
+
+    public static function append($id = 'default')
+    {
+        if ( get_called_class() == 'BODY' ){
+            if ( self::$config['layout_id'] == '' ) {
+                self::$config['layout_id'] = $id;
+            }
+        }
+        
+        // store previous buffer
+        self::_flush();
+
+        // start this buffer
+        self::$config['buffer'] = get_called_class();
+        ob_start();
+    }
+
     public static function render()
     {
-        if ( get_called_class() == 'PAGE' ) {
-            self::_capture( self::$config['body'] );
-            self::_capture( self::$config['menu'] );
-
-            require_once('Style/Parser.php');
-
-            self::_capture( self::$config['page'] );
-            if (self::$content[ self::$config['buffer'] ]) {
-                self::$content[ self::$config['buffer'] ] .= ob_get_clean();
-            } else {
-                self::$content[ self::$config['buffer'] ] = ob_get_clean();
-            }
+        if ( get_called_class() == 'PAGE' ){
+            ob_start();
+                self::_capture( self::$config['body'] );
+                self::_capture( self::$config['menu'] );
+                require_once('Style/Parser.php');
+                self::_capture( self::$config['page'] );
+            self::$content[ 'PAGE' ] .= ob_get_clean();
         }
         echo (isset(self::$content[get_called_class()])) 
              ? self::$content[get_called_class()]
              : '';
     }
-
-    protected function __construct() {} 
-    final private function __clone() {}
-
-    public static function set($arr) { foreach ($arr as $k => $v) { self::$config[$k] = $v; } }
-
-    public static function id()   { return self::$config['id'];   }
-    public static function name() { return self::$config['name']; }
- 
-    public static function append() {
-        $className = get_called_class();
-        if (isset(self::$config['buffer'])){
-            if (isset(self::$content[ self::$config['buffer'] ])) {
-                self::$content[ self::$config['buffer'] ] .= ob_get_clean();
-            } else {
-                self::$content[ self::$config['buffer'] ] = ob_get_clean();
-            }
-        }
-        self::$config['buffer'] = $className;
-        ob_start();
-    }
         
-        
-        public static function i($file)
+    public static function i($file)
     {
         $paths = array(
             self::$config['subcontent'] . strtolower(self::$config['id']) . '/' . $file . (preg_match('/.php$/',$file)? '' : '.php'),
             self::$config['subcontent'] . $file . (preg_match('/.php$/',$file)? '' : '.php'),
             self::$config['root'] . $file . (preg_match('/.php$/',$file)? '' : '.php')
         );
-        foreach ($paths as $p)
-        {
-            if ( file_exists($p) ) {
-               include_once($p);
-            }
-        }
+        foreach ($paths as $p) if ( file_exists($p) ) include_once($p);
     }
 }
 class TITLE extends page {}
@@ -110,7 +114,33 @@ class STYLE extends page {}
 class SCRIPT extends page {}
 class MENU extends page {}
 class EXTRA extends page {}
+class INLINE extends page { public static function append($id = 'default') { return; } }
 class BODY extends page {}
 class FOOTER extends page {}
-class INLINE extends page { public static function end($id = 'default') { echo ob_get_clean(); } }
 class COMMENT extends page {}
+class LAYOUT extends page {
+    public static function def($id = 'default') { ob_start(); }
+    public static function end($id = 'default')  {
+
+        // first layout specified is the default
+        if ( self::$config['layout_default'] == '' ) {
+            self::$config['layout_default'] = $id;
+        }
+
+        if ((
+                // set when BODY::append('layout_id') was called
+                self::$config['layout_id'] == $id
+            )
+            ||
+            (
+                (self::$config['layout_id'] == 'default') &&
+                ($id == self::$config['layout_default'])
+            ))
+        {
+            echo ob_get_clean();
+            //self::_flush();
+        } else {
+            ob_end_clean();
+        }
+    }
+}
