@@ -5,9 +5,12 @@
 $plugin_class = 'NestedSelectorsPlugin';
 class NestedSelectorsPlugin extends CacheerPlugin
 {
+    
     var $DOM;
     function process($css)
     {
+
+        //var_dump($css);
         /******************************************************************************
          Process nested selectors
          ******************************************************************************/

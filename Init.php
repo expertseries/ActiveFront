@@ -66,23 +66,26 @@ class ActiveFront
             case 'css'        : require_once('Style.php'); STYLECACHEER::init();  break;
             case '/a/scripts/': require_once('Script/Folder.php'); break;
             case '/a/styles/' : require_once('Style/Folder.php'); break;
-            case '/a/scripts/': require_once('Script/Folder.php'); break;
-            case '/a/styles/' : require_once('Style/Folder.php'); break;
         }
     }
 
     public static function mapRequest($uri)
     {
-        self::$p['request_uri'] = $uri;
-        self::$p['listing_format'] = 'ADVANCED';
         
         $files = self::readDirectory( CONFIG::get('DOCUMENT_ROOT') );
         $metafiles = array();
+
+        self::$p['request_uri'] = $uri;
+        self::$p['listing_format'] = 'SUBDOMAIN';
 
         foreach ($files as $file)
         {
             if ( $file == 'index.php' ) {
                 self::$p['listing_format'] = 'BASIC';
+                break;
+            }
+            if ( preg_match("/^\w+\.\w+\.\w+\,/",$file) ) {
+                self::$p['listing_format'] = 'FULLDOMAIN';
                 break;
             }
         }
@@ -124,8 +127,66 @@ class ActiveFront
             	             'name'=>self::$p['name'],
             	             'id'  =>self::$p['id']);
             	break;
-            
-            case 'ADVANCED':
+
+            case 'SUBDOMAIN':
+//echo 'hi';
+                $req = array(
+                    'host' => CONFIG::get('HTTP_HOST'),
+                    'uri' => join(',',explode('/',substr($uri, 1, -1)))
+                );
+
+                $tgt = array();
+
+                //trim any leading [X.]subdomain.domain.com from the request
+                $req['host'] = preg_replace('/.*?([^.]+\.\w+\.\w+)$/','\\1',$req['host']);
+                // adjust for subdomain file listing
+                $req['host'] = preg_replace('/([^.]+)\.\w+\.\w+$/','\\1',$req['host']);
+
+                foreach ($files as $file)
+                {
+                    $a = explode(',', $file, 3);
+                    $mf = array(
+                        'file'  => $file,
+                        'host'  => $a[0],
+                        'route' => $a[1],
+                        'uri'   => substr($a[2],0,strpos($a[2],'.php'))
+                    );
+
+                    if ( $mf['host'] == $req['host'] ) {
+                        if (($mf['uri'] == $req['uri'])
+                            || (($mf['route'] == 0) && ($req['uri'] == ''))
+                            ){
+
+                                $tgt['file']  = $mf['file'];
+                                $tgt['host']  = $mf['host'];
+                                $tgt['route'] = $mf['route'];
+                                $tgt['uri']   = $mf['uri'];
+                                break;
+                                break;
+                            }
+                    }
+
+                }
+//                if (!isset($tgt['file'])) {
+//                    $tgt['file'] = '_404.php';
+//                }
+
+        	    // Create Page Name and ID
+            	$tgt['id'] = isset($tgt['uri']) ? $tgt['uri'] : '';
+            	// _page.not.found.php
+            	$tgt['id'] = preg_replace('/^_/','',$tgt['id']);
+            	// page.not.found.php
+            	$tgt['id'] = preg_replace('/[\-\.](php)?/',' ',$tgt['id']);
+            	// page not found
+            	$tgt['name'] = ucwords($tgt['id']);
+            	// Page Not Found (name)
+            	$tgt['id'] = preg_replace('/ /','',$tgt['name']);
+            	// PageNotFound (id)
+
+
+            	return $tgt;
+            	break;            
+            case 'FULLDOMAIN':
 
                 $req = array(
                     'host' => CONFIG::get('HTTP_HOST'),
@@ -134,7 +195,7 @@ class ActiveFront
 
                 $tgt = array();
 
-                //trim any leading subdomain info from the request
+                //trim any leading [X.]subdomain.domain.com from the request
                 $req['host'] = preg_replace('/.*?([^.]+\.\w+\.\w+)$/','\\1',$req['host']);
 
                 foreach ($files as $file)
@@ -152,14 +213,16 @@ class ActiveFront
                             || (($mf['route'] == 0) && ($req['uri'] == ''))
                             ){
                                 
-                                $tgt = $mf;
+                                $tgt['file']  = $mf['file'];
+                                $tgt['host']  = $mf['host'];
+                                $tgt['route'] = $mf['route'];
+                                $tgt['uri']   = $mf['uri'];
                                 break;
                                 break;
                             }
                     }
 
                 }
-                
 //                if (!isset($tgt['file'])) {
 //                    $tgt['file'] = '_404.php';
 //                }

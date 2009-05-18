@@ -17,12 +17,15 @@ class PAGE
 {
     public static $config = array(
         'id'             => '',
+        'env'            => 'facebook',
         'name'           => '',
         'menu'           => '',
         'body'           => '',
         'subcontent'     => '',
         'root'           => '',
         'buffer'         => NULL,
+        'layout_buffer_id'=> NULL,
+        'panel_buffer_id'=> NULL,
         'page'           => false,
         'layout_default' => '',
         'layout_id'      => ''
@@ -50,40 +53,12 @@ class PAGE
     public    static function set($a) { foreach ($a as $k => $v) self::$config[$k] = $v; }
     public    static function id()    { return self::$config['id'];   }
     public    static function name()  { return self::$config['name']; }
-
+    public    static function env()  { return self::$config['env']; }
     protected static function _capture($path) { require_once($path); }
-    protected static function _flush()
-    {
-        // if a content section was already started
-        if ( !is_null(self::$config['buffer']) ){
-            $bufferid = self::$config['buffer'];
-            if ( !isset(self::$content[ $bufferid ])) {
-                self::$content[ $bufferid ] = '';
-            }
-            // append everything in the cache to its content section id
-            self::$content[ $bufferid ] .= ob_get_clean();
-            self::$config['buffer'] = NULL;
-        }
-    }
-
-    public static function append($id = 'default')
-    {
-        if ( get_called_class() == 'BODY' ){
-            if ( self::$config['layout_id'] == '' ) {
-                self::$config['layout_id'] = $id;
-            }
-        }
-        
-        // store previous buffer
-        self::_flush();
-
-        // start this buffer
-        self::$config['buffer'] = get_called_class();
-        ob_start();
-    }
 
     public static function render()
     {
+        xdebug_break();
         if ( get_called_class() == 'PAGE' ){
             ob_start();
                 self::_capture( self::$config['body'] );
@@ -106,16 +81,55 @@ class PAGE
         );
         foreach ($paths as $p) if ( file_exists($p) ) include_once($p);
     }
+
+    public static function append($id = 'default')
+    {
+        if ( get_called_class() == 'LAYOUT' ){
+            if ( self::$config['layout_id'] == '' ) {
+                self::$config['layout_id'] = $id;
+            }
+            return;
+        }
+        if ( get_called_class() == 'BODY' ){
+            if ( self::$config['layout_id'] == '' ) {
+                self::$config['layout_id'] = $id;
+            }
+        }
+        
+        // if a content section was already started
+        if ( !is_null(self::$config['buffer']) ){
+            $bufferid = self::$config['buffer'];
+            if ( !isset(self::$content[ $bufferid ])) {
+                self::$content[ $bufferid ] = '';
+            }
+            // append everything in the cache to its content section id
+            self::$content[ $bufferid ] .= ob_get_clean();
+            self::$config['buffer'] = NULL;
+        }
+
+        // start this buffer
+        self::$config['buffer'] = get_called_class();
+        ob_start();
+    }
+
+
+
 }
 class TITLE extends page {}
 class DESCRIPTION extends page {}
 class KEYWORDS extends page {}
 class STYLE extends page {}
 class SCRIPT extends page {}
+
 class MENU extends page {}
+class SIDEBAR extends page {}
+class SIDEBAR2 extends page {}
+class RELATED extends page {}
 class EXTRA extends page {}
 class INLINE extends page { public static function append($id = 'default') { return; } }
+
 class BODY extends page {}
+
 class FOOTER extends page {}
 class COMMENT extends page {}
 class LAYOUT extends page {
@@ -138,9 +152,19 @@ class LAYOUT extends page {
             ))
         {
             echo ob_get_clean();
-            //self::_flush();
         } else {
             ob_end_clean();
         }
+    }
+}
+class PANEL {
+    public static $config = array(
+        'panel_buffer_id'=> NULL,
+    );
+    public static function def($id = 'default',$t = '') {
+        return;
+    }
+    public static function end($id = 'default',$t = '') {
+        return;
     }
 }

@@ -5,7 +5,8 @@ header('Content-type: text/javascript');
 class ScriptManager {
 
     private static $output   = null;
-    private static $filelist = array();
+    private static $jsfilelist = array();
+    private static $cssfilelist = array();
     private static $debug    = 1;
 
     public static function getFileList($path,$desired_ext) {
@@ -20,16 +21,21 @@ class ScriptManager {
             while (false !== ($file = readdir($handle))) {
                 
                 $file_ext = substr($file, strrpos($file, '.') + 1);
-                if (
-                    ($file_ext == $desired_ext)
-                     && (substr($file, 0, 1) != '.')
-                     && (substr($file, 0, 1) != '-')
-                    ) {
-//                    self::$filelist[] = $rootPath . '/' . $path . $file;
-                    $last_modified = filemtime($path . $file);
-                    self::$filelist[] =  $rel_path . $file . '?recache=' . $last_modified;
 
-                }
+                if ((substr($file, 0, 1) != '.') &&
+                   (substr($file, 0, 1) != '-')
+               ) {
+                   $last_modified = filemtime($path . $file);
+                   switch ($file_ext) {
+                       case 'js' :
+                       self::$jsfilelist[] =  $rel_path . $file . '?recache=' . $last_modified;
+                       break;
+                       case 'css' :
+                       self::$cssfilelist[] =  $rel_path . $file . '?recache=' . $last_modified;
+                       break;
+                   }
+               }
+
             }
             closedir($handle);
         }
@@ -38,10 +44,12 @@ class ScriptManager {
     public static function includeFiles() {
     
         if (self::$debug == 1) {
-            foreach (self::$filelist as $file) {
+            foreach (self::$cssfilelist as $file) {
+                 self::$output .= "document.write('<link rel=\"stylesheet\" href=\"$file\" type=\"text/css\" media=\"screen, projection\">');\n";
+            }
+            foreach (self::$jsfilelist as $file) {
                  self::$output .= "document.write('<script type=\"text/javascript\" src=\"$file\"> </script>');\n";
             }
-        
         }
         return self::$output;
     
