@@ -88,7 +88,7 @@ class PAGE
             ob_start();
                 self::_capture( self::$config['body'] );
                 self::_capture( self::$config['menu'] );
-                require_once('Style/Parser.php');
+                require_once('ActiveFront/Style/Parser.php');
                 self::_capture( self::$config['page'] );
             self::$content[ 'PAGE' ] .= ob_get_clean();
         }
