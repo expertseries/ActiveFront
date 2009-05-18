@@ -1,5 +1,4 @@
 <? 
-
 class CONFIG
 {
     private static $o = array();

@@ -1,9 +1,9 @@
 <? 
 
-require_once('Config.php');
-require_once('Page.php');
-require_once('Sitemap.php');
-require_once('Utility.php');
+require_once('ActiveFront/Config.php');
+require_once('ActiveFront/Page.php');
+require_once('ActiveFront/Sitemap.php');
+require_once('ActiveFront/Utility.php');
 
 class ActiveFront
 {
